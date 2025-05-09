@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Cliente</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Batalha Naval</h1>
+	<div id="tela_espera" class="tela ativa">
+		<h2>Esperando jogador</h2>
+	</div>
+
+
+
+	<div id="tela_posicionamento" class="tela">
+		<h2 id="player_posicionamento"> Player: </h2>
+        <div class="tabuleiro-container">
+			<div>
+				<button id="porta_aviao" class="ship">Porta-Avião</button>
+				<button id="encouracado" class="ship">Encouraçado</button>
+				<button id="hidroaviao" class="ship">Hidroavião</button>
+				<button id="submarino" class="ship">Submarino</button>
+				<button id="cruzador" class="ship">Cruzador</button>
+			</div>
+			<h2>Seu Tabuleiro</h2>
+			<table id="tabuleiro3"></table>
+			<div class="tabuleiros">
+				<button id="comecar" class="button">Pronto!</button>
+			</div>
+        </div>
+    </div>
+
+
+    
+	<div id="tela_jogo" class="tela">
+		<h2 id="player_jogo"> Player: </h2>
+		<div class="tabuleiros">
+			<div class="tabuleiro-container">
+				<h2>Tabuleiro Inimigo</h2>
+				<table id="tabuleiro1"></table>
+			</div>
+			<div class="tabuleiro-container">
+				<h2>Seu Tabuleiro</h2>
+				<table id="tabuleiro2"></table>
+			</div>
+		</div>
+	</div>
+
+
+	<script>
+	function posicionar_barco(embarcacao)
+	{
+		var cel = document.querySelector(`#tabuleiro2 td[data-row="${evento[1]}"][data-col="${evento[2]}"]`);
+
+
+	}
+	</script>
+
+
+<script>
+	function copiarTabuleiro(origemId, destinoId) {
+  const origem = document.getElementById(origemId);
+  const destino = document.getElementById(destinoId);
+
+  const celulasOrigem = origem.querySelectorAll("td");
+  celulasOrigem.forEach(celulaOrigem => {
+    const row = celulaOrigem.dataset.row;
+    const col = celulaOrigem.dataset.col;
+
+    const celulaDestino = destino.querySelector(`td[data-row="${row}"][data-col="${col}"]`);
+
+    if (celulaOrigem.classList.contains("engaged")) {
+      celulaDestino.classList.add("engaged");
+    }
+  });
+}
+</script>
+
+
+	<script>
+		const porta_aviao = {tamanho: 5, orientacao: "horizontal"}
+		const encouracado = {tamanho: 4, orientacao: "horizontal" }
+		const hidroaviao = {tamanho: 3, orientacao: "horizontal" }
+		const submarino = {tamanho: 1, orientacao: "horizontal" }
+		const cruzador = {tamanho: 2, orientacao: "horizontal" }
+		var embarcacao;
+	</script>
+
+    <script>
+		//------------------Pronto------------------------------------------
+        document.getElementById('comecar').addEventListener('click', function(){
+			button = document.getElementById('comecar')
+			button.classList.remove('button')
+			button.classList.add('tela')
+            ws.send(`comecar;${id};${inimigo}`);
+        })
+
+		//-----------------Porta-Avião------------------------------------------
+		document.getElementById('porta_aviao').addEventListener('click', function(){
+			embarcacao = porta_aviao;
+        })
+
+
+		document.getElementById('encouracado').addEventListener('click', function(){
+			embarcacao = encouracado;
+        })
+
+
+		document.getElementById('hidroaviao').addEventListener('click', function(){
+			embarcacao = hidroaviao;
+        })
+
+
+		document.getElementById('submarino').addEventListener('click', function(){
+			embarcacao = submarino;
+        })
+
+
+		document.getElementById('cruzador').addEventListener('click', function(){
+			embarcacao = cruzador;
+        })
+    </script>
+
+
+    <script>
+        const nome = prompt("Bem vindo ao jogo de Batalha Naval!\nSeu nome:");
+        const serverAddress = "ws://127.0.0.1:8765";
+        const ws = new WebSocket(serverAddress);
+
+		var resultado, id, inimigo, tabela, linha, coluna, player;
+
+        // Correção aqui: sem parênteses
+        ws.onopen = () => {
+            ws.send(nome);
+        };
+
+        ws.onmessage = (msg) => {
+			let evento = msg.data.toString().split(";")
+			console.log(evento)
+			switch (evento[0]) {
+				case 'id':
+					id = evento[1];
+					break;
+
+				case 'comeco1':
+					document.getElementById('tela_espera').classList.remove('ativa');
+					document.getElementById('tela_posicionamento').classList.add('ativa');
+					player = evento[1];
+					document.getElementById('player_posicionamento').textContent = `Player: ${evento[1]}`;
+					break;
+
+				case 'comeco2':
+					document.getElementById('tela_posicionamento').classList.remove('ativa')
+					document.getElementById('tela_jogo').classList.add('ativa')
+					document.getElementById('player_jogo').textContent = `Player: ${player}`
+
+					copiarTabuleiro("tabuleiro3","tabuleiro2");
+
+					break;
+
+				case 'fim':
+					document.getElementById('tela_espera').classList.add('ativa')
+					document.getElementById('tela_jogo').classList.remove('ativa')
+					break;
+
+				case 'inimigo':
+					inimigo = evento[1];
+					break;
+
+				case 'disparo':
+					cel = document.querySelector(`#tabuleiro2 td[data-row="${evento[1]}"][data-col="${evento[2]}"]`);
+
+					if(cel.classList.contains('engaged'))
+					{
+						ws.send(`resposta;${inimigo};acertou;${evento[1]};${evento[2]}`)
+						cel.classList.remove(`engaged`)
+						cel.classList.add(`hit`)
+					}
+					else
+					{
+						ws.send(`resposta;${inimigo};errou;${evento[1]};${evento[2]}`)
+						cel.classList.add(`miss`)
+					}
+					break;
+
+				case 'resposta':
+					resposta = evento[1];
+
+					cel = document.querySelector(`#tabuleiro1 td[data-row="${evento[2]}"][data-col="${evento[3]}"]`);
+
+					if(resposta == 'acertou')
+					{
+						cel.classList.remove('engaged')
+						cel.classList.add('hit')
+					}
+					else
+					{
+						cel.classList.add('miss')
+					}
+					break;
+			
+				default:
+					break;
+			}
+        };
+    </script>
+
+	<script>
+		for(var i = 0; i < 10; i++)
+		{
+			linhas = [];
+			for(var j = 0; j < 10; j++)
+			{
+				colunas = [];
+				linhas.push(colunas);
+			}
+		}
+	</script>
+
+    
+
+    <script>
+		function criarTabuleiroInimigoComCoordenadas(id) {
+			const letras = "A;B;C;D;E;F;G;H;I;J".split(";");
+			const numeros = "1;2;3;4;5;6;7;8;9;10"
+			const tamanho = 10;
+			const tabuleiro = document.getElementById(id);
+
+		// Criar a linha de letras (topo)
+			const linhaCabecalho = document.createElement("tr");
+			const cantoVazio = document.createElement("th");
+			linhaCabecalho.appendChild(cantoVazio); // canto superior esquerdo vazio
+			for (let letra of letras) {
+				const th = document.createElement("th");
+				th.textContent = letra;
+				linhaCabecalho.appendChild(th);
+			}
+			tabuleiro.appendChild(linhaCabecalho);
+	
+		// Criar as linhas com números e células jogáveis
+			for (let i = 0; i < tamanho; i++) {
+				const linha = document.createElement("tr");
+
+				const th = document.createElement("th");
+				th.textContent = i + 1;
+				linha.appendChild(th); // número da linha
+
+				for (let j = 0; j < tamanho; j++) {
+					const celula = document.createElement("td");
+					celula.classList = `td inimigo`;
+					celula.dataset.row = i;
+					celula.dataset.col = j;
+
+					celula.addEventListener("click", function () {
+						ws.send(`disparo;${inimigo};${celula.dataset.row};${celula.dataset.col}`);
+						celula.removeEventListener("click", arguments.callee);
+					});
+
+					linha.appendChild(celula);
+				}
+
+				tabuleiro.appendChild(linha);
+			}
+		}
+
+		function criarMeuTabuleiroComCoordenadas(id) {
+			const letras = "A;B;C;D;E;F;G;H;I;J".split(";");
+			const numeros = "1;2;3;4;5;6;7;8;9;10"
+			const tamanho = 10;
+			const tabuleiro = document.getElementById(id);
+
+		// Criar a linha de letras (topo)
+			const linhaCabecalho = document.createElement("tr");
+			const cantoVazio = document.createElement("th");
+			linhaCabecalho.appendChild(cantoVazio); // canto superior esquerdo vazio
+			for (let letra of letras) {
+				const th = document.createElement("th");
+				th.textContent = letra;
+				linhaCabecalho.appendChild(th);
+			}
+			tabuleiro.appendChild(linhaCabecalho);
+	
+		// Criar as linhas com números e células jogáveis
+			for (let i = 0; i < tamanho; i++) {
+				const linha = document.createElement("tr");
+
+				const th = document.createElement("th");
+				th.textContent = i + 1;
+				linha.appendChild(th); // número da linha
+
+				for (let j = 0; j < tamanho; j++) {
+					const celula = document.createElement("td");
+					celula.classList = `td amigo`;
+					celula.dataset.row = i;
+					celula.dataset.col = j;
+
+					linha.appendChild(celula);
+				}
+
+				tabuleiro.appendChild(linha);
+			}
+		}
+
+		function criarMeuTabuleiroComBarcos(id) {
+			const letras = "A;B;C;D;E;F;G;H;I;J".split(";");
+			const numeros = "1;2;3;4;5;6;7;8;9;10"
+			const tamanho = 10;
+			const tabuleiro = document.getElementById(id);
+
+		// Criar a linha de letras (topo)
+			const linhaCabecalho = document.createElement("tr");
+			const cantoVazio = document.createElement("th");
+			linhaCabecalho.appendChild(cantoVazio); // canto superior esquerdo vazio
+			for (let letra of letras) {
+				const th = document.createElement("th");
+				th.textContent = letra;
+				linhaCabecalho.appendChild(th);
+			}
+			tabuleiro.appendChild(linhaCabecalho);
+	
+		// Criar as linhas com números e células jogáveis
+			for (let i = 0; i < tamanho; i++) {
+				const linha = document.createElement("tr");
+
+				const th = document.createElement("th");
+				th.textContent = i + 1;
+				linha.appendChild(th); // número da linha
+
+				for (let j = 0; j < tamanho; j++) {
+					const celula = document.createElement("td");
+					celula.classList = `td amigo`;
+					celula.dataset.row = i;
+					celula.dataset.col = j;
+
+					celula.addEventListener('click', function()
+					{
+						celula.classList.add('engaged')
+					})
+
+					linha.appendChild(celula);
+				}
+
+				tabuleiro.appendChild(linha);
+			}
+		}
+
+
+		criarMeuTabuleiroComCoordenadas('tabuleiro2');
+		criarMeuTabuleiroComBarcos('tabuleiro3');
+		criarTabuleiroInimigoComCoordenadas('tabuleiro1');
+    </script>
+	
+</body>
+</html>

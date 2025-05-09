@@ -1,0 +1,84 @@
+body
+        {
+            background-color: dodgerblue;
+        }
+		.tabuleiros
+		{
+			display: flex;
+			justify-content: center;
+			gap: 50px; /* espaço entre os dois tabuleiros */
+			margin-top: 30px;
+		}
+
+		.tabuleiro-container
+		{
+			text-align: center;
+		}
+
+		table
+		{
+			border-collapse: collapse;
+			margin: 0 auto;
+		}
+
+		td.inimigo
+		{
+			width: 40px;
+			height: 40px;
+			border: 1px solid #000;
+			background-color: #a3d5ff;
+			cursor: pointer;
+			user-select: auto;
+		}
+
+        td.amigo
+		{
+			width: 20px;
+			height: 20px;
+			border: 1px solid #000;
+			background-color: #a3d5ff;
+			cursor: default;
+		}
+
+		td.engaged
+		{
+			background-color: black;
+		}
+
+		td.hit
+		{
+			background-color: red;
+		}
+
+		td.miss
+		{
+			background-color: gray;
+		}
+
+        .tela
+        {
+            display: none;
+        }
+
+        .ativa 
+        {
+            display: block
+        }
+
+		button
+		{
+			height: 40px;
+			width: 80px;
+			border-radius: 20%;
+			font-size: medium;
+			background-color: aquamarine;
+		}
+
+		.ship
+		{
+			height: 40px;
+			width: 100px;
+			border-radius: 20%;
+			font-size: medium;
+			background-color: aquamarine;
+		}
